@@ -18,25 +18,33 @@
         "registry": "https://registry.npmjs.org/",
         "access": "public"
     },
-    "repository": "https://github.com/opencreek/provider-stack",
     "license": "MIT",
     "devDependencies": {
-        "@auto-it/all-contributors": "^10.32.2",
-        "@auto-it/first-time-contributor": "^10.32.2",
-        "@types/react": "^17.0.34",
-        "@typescript-eslint/eslint-plugin": "^5.3.1",
-        "@typescript-eslint/parser": "^5.3.1",
-        "auto": "^10.32.2",
-        "eslint": "^8.2.0",
-        "eslint-config-prettier": "^8.3.0",
-        "prettier": "^2.4.1",
-        "typescript": "^4.4.4"
+        "@auto-it/first-time-contributor": "^11.3.6",
+        "@eslint/js": "^10.0.1",
+        "@types/react": "^19.2.18",
+        "auto": "^11.3.6",
+        "eslint": "^10.9.1",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.9.6",
+        "typescript": "^6.0.0",
+        "typescript-eslint": "^8.68.0"
     },
-    "peer": {
-        "react": "^17.0.0"
+    "peerDependencies": {
+        "@types/react": "^17 || ^18 || ^19",
+        "react": "^17 || ^18 || ^19"
+    },
+    "peerDependenciesMeta": {
+        "@types/react": {
+            "optional": true
+        }
     },
     "prettier": {
         "semi": false,
         "tabWidth": 4
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/opencreek/provider-stack.git"
     }
 }
