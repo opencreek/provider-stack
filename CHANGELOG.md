@@ -1,3 +1,15 @@
+# v1.0.0 (Mon Aug 31 2026)
+
+#### 💥 Breaking Change
+
+- Upgrade versions and fix peer dependencies [#6](https://github.com/opencreek/provider-stack/pull/6) ([@mhlz](https://github.com/mhlz))
+
+#### Authors: 1
+
+- Mischa Holz ([@mhlz](https://github.com/mhlz))
+
+---
+
 # v0.3.1 (Fri Nov 12 2021)
 
 #### 🐛 Bug Fix
