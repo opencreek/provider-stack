@@ -1,5 +1,18 @@
-import type { ComponentType, ReactElement, ReactNode } from "react"
+import type {
+    ComponentType,
+    PropsWithChildren,
+    ReactElement,
+    ReactNode,
+} from "react"
 import React from "react"
+
+/**
+ * A provider as stored in the stack: it always receives children, plus
+ * whatever props were supplied when it was added.
+ */
+type ProviderComponent = ComponentType<
+    PropsWithChildren<Record<string, unknown>>
+>
 
 /**
  * Represents a Stack of provider
@@ -12,7 +25,7 @@ type ProviderStack = {
      */
     add<T>(
         provider: ComponentType<T>,
-        props?: Omit<T, "children">
+        props?: Omit<T, "children">,
     ): ProviderStack
     /**
      * The whole stack in order.
@@ -37,10 +50,11 @@ export function ProviderStack({
     providers: ProviderStack
 }): ReactElement {
     const provider = providers.providers?.reduceRight(
-        (cur, [Provider, props]) => {
+        (cur, [provider, props]) => {
+            const Provider = provider as ProviderComponent
             return <Provider {...props}>{cur}</Provider>
         },
-        <>{children}</>
+        <>{children}</>,
     )
 
     return <>{provider}</>
@@ -57,12 +71,12 @@ export function providers(): ProviderStack {
 function stack(
     currentProviders: Array<
         [ComponentType<unknown>, Record<string, unknown> | undefined]
-    >
+    >,
 ): ProviderStack {
     return {
         add: function <T>(
             provider: ComponentType<T>,
-            props?: Omit<T, "children">
+            props?: Omit<T, "children">,
         ) {
             // @ts-ignore
             return stack([...(currentProviders ?? []), [provider, props]])
