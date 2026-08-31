@@ -18,7 +18,9 @@ type ProviderStack = {
      * The whole stack in order.
      * Tuple of provider and props
      */
-    providers: Array<[ComponentType<unknown>, unknown]>
+    providers: Array<
+        [ComponentType<unknown>, Record<string, unknown> | undefined]
+    >
 }
 
 /**
@@ -53,7 +55,9 @@ export function providers(): ProviderStack {
 }
 
 function stack(
-    currentProviders: Array<[ComponentType<unknown>, unknown]>
+    currentProviders: Array<
+        [ComponentType<unknown>, Record<string, unknown> | undefined]
+    >
 ): ProviderStack {
     return {
         add: function <T>(
