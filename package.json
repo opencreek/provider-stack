@@ -18,7 +18,6 @@
         "registry": "https://registry.npmjs.org/",
         "access": "public"
     },
-    "repository": "https://github.com/opencreek/provider-stack",
     "license": "MIT",
     "devDependencies": {
         "@auto-it/first-time-contributor": "^11.3.6",
@@ -43,5 +42,9 @@
     "prettier": {
         "semi": false,
         "tabWidth": 4
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/opencreek/provider-stack.git"
     }
 }

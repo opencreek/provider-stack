@@ -1,6 +1,11 @@
 {
   "plugins": [
-    "npm",
+    [
+      "npm",
+      {
+        "setRcToken": false
+      }
+    ],
     "first-time-contributor"
   ],
   "owner": "opencreek",

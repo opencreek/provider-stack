@@ -1,0 +1,107 @@
+name: CI
+
+# Both the release (push to main) and the canary (pull request) publish paths
+# live in this single file on purpose: npm binds a Trusted Publisher to one
+# repository + workflow filename, so everything that runs `npm publish` has to
+# come from here. Do not rename this file without updating the Trusted
+# Publisher entry on npmjs.com.
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        types: [opened, synchronize]
+
+permissions:
+    contents: read
+
+jobs:
+    audit:
+        name: Audit
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            # The published package has zero runtime dependencies, so consumers are
+            # unaffected by dev-only findings. The remaining moderate advisories are
+            # ReDoS issues in octokit, pinned transitively by the `auto` release CLI
+            # and not fixable without downgrading it. Gate on high/critical instead.
+            - run: npm audit --audit-level=high
+
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 26
+                  cache: npm
+            - run: npm ci
+            - run: npm run lint
+
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 26
+                  cache: npm
+            - run: npm ci
+            - run: npm run test
+            - run: npm run build
+
+    pr-check:
+        name: Check version tag
+        if: github.event_name == 'pull_request'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 26
+            - run: npx auto pr-check --url https://github.com/$GITHUB_REPOSITORY
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    publish:
+        # `auto shipit` is context aware and covers both paths from one command:
+        #   - on main  -> full release (version bump, changelog, tag, npm publish)
+        #   - on a PR  -> canary release published under the `canary` dist-tag
+        name: Publish
+        needs: [lint, test]
+        runs-on: ubuntu-latest
+        # auto's own version-bump commits carry "[skip ci]"; without this the push
+        # to main it creates would retrigger this workflow in a loop. On a
+        # pull_request event head_commit is absent, so this evaluates to true.
+        if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+        permissions:
+            contents: write
+            pull-requests: write
+            id-token: write # required for npm Trusted Publishing (OIDC)
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # auto needs full history + tags to compute the version
+            # Deliberately no `registry-url` here: it makes setup-node write an
+            # .npmrc containing ${NODE_AUTH_TOKEN}, which npm cannot expand now that
+            # the token is gone. package.json publishConfig already pins the registry
+            # and public access, so nothing is lost by omitting it.
+            # node 26 bundles npm 11.19.x, comfortably past the npm >= 11.5.1 that
+            # Trusted Publishing requires, so there is no need to upgrade npm here.
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 26
+                  cache: npm
+            - run: npm ci
+            - run: npm run build
+
+            # Auth comes from npm Trusted Publishing: the id-token permission above
+            # lets npm exchange a GitHub OIDC token for a short-lived registry
+            # credential, so no NPM_TOKEN is required. `setRcToken: false` in .autorc
+            # stops auto from writing its own _authToken into ~/.npmrc and clobbering
+            # that. GH_TOKEN is unrelated - it is for creating the GitHub release.
+            - run: npx auto shipit
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
