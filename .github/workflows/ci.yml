@@ -56,11 +56,22 @@ jobs:
         name: Check version tag
         if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
+        # `auto pr-check` reports its result by posting a commit status on the PR,
+        # which the top-level `contents: read` does not allow.
+        permissions:
+            contents: read
+            statuses: write
+            pull-requests: read
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
                   node-version: 26
+                  cache: npm
+            # Needed so npx resolves the pinned auto from the lockfile together with
+            # its plugins. Without it npx fetches a bare `auto` that cannot see
+            # first-time-contributor, and auto warns "Could not find plugin".
+            - run: npm ci
             - run: npx auto pr-check --url https://github.com/$GITHUB_REPOSITORY
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,8 +88,9 @@ jobs:
         # pull_request event head_commit is absent, so this evaluates to true.
         if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
         permissions:
-            contents: write
-            pull-requests: write
+            contents: write # create the tag, changelog commit and GitHub release
+            pull-requests: write # comment the canary version onto the PR
+            statuses: write # auto reports release status back onto the commit
             id-token: write # required for npm Trusted Publishing (OIDC)
         steps:
             - uses: actions/checkout@v4
